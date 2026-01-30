@@ -40,7 +40,8 @@
       inklineMaxPages: cfg.maxPages,
       inklineBaseUrl: cfg.baseUrl,
       inklineVersion: cfg.version,
-      inklineEmptyText: cfg.emptyText
+      inklineEmptyText: cfg.emptyText,
+      inklineDebug: cfg.debug
     };
   }
 
@@ -65,8 +66,18 @@
       version: source.inklineVersion || (defaults && defaults.version) || '2021-07-28',
       emptyText: source.inklineEmptyText || (defaults && defaults.emptyText) || 'No outage events found.',
       maxPages: maxPages,
-      pageLimit: pageLimit
+      pageLimit: pageLimit,
+      debug: source.inklineDebug === 'true' || source.inklineDebug === true || (defaults && defaults.debug) || false
     };
+  }
+
+  function logDebug(config, message, data) {
+    if (!config || !config.debug || !window || !window.console || !console.log) return;
+    if (typeof data !== 'undefined') {
+      console.log('[Inkline Listing Grid]', message, data);
+    } else {
+      console.log('[Inkline Listing Grid]', message);
+    }
   }
 
   function readConfig(script) {
@@ -317,6 +328,17 @@
 
   async function initListing(config, listingElement) {
     var container = ensureContainer(listingElement);
+
+    logDebug(config, 'Resolved config', {
+      hasToken: !!config.apiToken,
+      locationId: config.locationId,
+      schemaKey: config.schemaKey,
+      templateUrl: config.templateUrl,
+      sortField: config.sortField,
+      sortOrder: config.sortOrder,
+      pageLimit: config.pageLimit,
+      maxPages: config.maxPages
+    });
 
     if (!config.apiToken || !config.locationId || !config.schemaKey) {
       renderError(container, 'Missing required configuration: api token, location id, or schema key.');

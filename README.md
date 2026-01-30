@@ -32,13 +32,14 @@ Example embed:
   window.InklineListingConfig = {
     token: "YOUR_API_TOKEN",
     locationId: "YOUR_LOCATION_ID",
+    debug: true,
     pageLimit: 100,
     maxPages: 20
   };
 </script>
 
 <script
-  src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/outage-events-widget.js?v=1"
+  src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/inkline-listing-grid.js?v=1"
 ></script>
 ```
 
@@ -85,6 +86,7 @@ You can set shared settings globally with a small inline script:
   window.InklineListingConfig = {
     token: "YOUR_API_TOKEN",
     locationId: "YOUR_LOCATION_ID",
+    debug: true,
     pageLimit: 100,
     maxPages: 20
   };
@@ -101,6 +103,7 @@ You can set shared settings globally with a small inline script:
 | `data-inkline-max-pages` | No | Max pages to request | `20` |
 | `data-inkline-base-url` | No | API base URL | `https://services.leadconnectorhq.com` |
 | `data-inkline-version` | No | Inkline Connect API version header | `2021-07-28` |
+| `data-inkline-debug` | No | Enable console debug logs (`true` or `false`) | `false` |
 
 ## Configuration (Listing Block `data-*` Attributes)
 
@@ -142,7 +145,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   };
 </script>
 
-<script src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/outage-events-widget.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/inkline-listing-grid.js?v=1"></script>
 ```
 
 ## Notes & Troubleshooting
