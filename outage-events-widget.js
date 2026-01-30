@@ -5,33 +5,47 @@
     if (document.currentScript) {
       return document.currentScript;
     }
-    var scripts = document.querySelectorAll('script[data-ghl-widget="outage-events"]');
+    var scripts = document.querySelectorAll('script[data-inkline-widget="outage-events"], script[data-inkline-widget="service-status-events"], script[data-inkline-widget="inkline-listing-grid"], script[data-inkline-target]');
     if (scripts.length > 0) {
       return scripts[scripts.length - 1];
     }
     return null;
   }
 
+  function normalizeTargetSelector(target) {
+    if (!target) return '';
+    if (target[0] === '#' || target[0] === '.' || target.indexOf(' ') !== -1) {
+      return target;
+    }
+    return '#' + target;
+  }
+
   function readConfig(script) {
     var dataset = (script && script.dataset) ? script.dataset : {};
-    var pageLimit = parseInt(dataset.ghlPageLimit || '100', 10);
+    var pageLimit = parseInt(dataset.inklinePageLimit || '100', 10);
     if (!Number.isFinite(pageLimit) || pageLimit <= 0) {
       pageLimit = 100;
     }
-    var maxPages = parseInt(dataset.ghlMaxPages || '20', 10);
+    var maxPages = parseInt(dataset.inklineMaxPages || '20', 10);
     if (!Number.isFinite(maxPages) || maxPages <= 0) {
       maxPages = 20;
     }
     return {
-      apiToken: dataset.ghlToken || '',
-      locationId: dataset.ghlLocationId || '',
-      schemaKey: dataset.ghlSchemaKey || 'custom_objects.outage_events',
-      propertyKey: dataset.ghlPropertyKey || 'custom_objects.outage_events.outage_event_name',
-      baseUrl: dataset.ghlBaseUrl || 'https://services.leadconnectorhq.com',
-      version: dataset.ghlVersion || '2021-07-28',
-      target: dataset.ghlTarget || '',
-      title: dataset.ghlTitle || '',
-      emptyText: dataset.ghlEmptyText || 'No outage events found.',
+      apiToken: dataset.inklineToken || '',
+      locationId: dataset.inklineLocationId || '',
+      schemaKey: dataset.inklineSchemaKey || 'custom_objects.service_status_events',
+      titleKey: dataset.inklineTitleKey || 'custom_objects.service_status_events.event_title',
+      descriptionKey: dataset.inklineDescriptionKey || 'custom_objects.service_status_events.event_description',
+      dateKey: dataset.inklineDateKey || 'custom_objects.service_status_events.event_datetime',
+      hourKey: dataset.inklineHourKey || 'custom_objects.service_status_events.event_hour',
+      minutesKey: dataset.inklineMinutesKey || 'custom_objects.service_status_events.event_minutes',
+      ampmKey: dataset.inklineAmpmKey || 'custom_objects.service_status_events.event_ampm',
+      updatedAtKey: dataset.inklineUpdatedAtKey || '',
+      templateUrl: dataset.inklineTemplateUrl || '',
+      baseUrl: dataset.inklineBaseUrl || 'https://services.leadconnectorhq.com',
+      version: dataset.inklineVersion || '2021-07-28',
+      target: normalizeTargetSelector(dataset.inklineTarget || ''),
+      emptyText: dataset.inklineEmptyText || 'No outage events found.',
       maxPages: maxPages,
       pageLimit: pageLimit
     };
@@ -44,8 +58,17 @@
     }
     if (!container) {
       container = document.createElement('div');
-      container.id = 'ghl-outage-events';
+      container.id = 'inkline-listing-grid';
       var scriptTag = findScriptTag();
+      if (scriptTag && scriptTag.dataset && scriptTag.dataset.inklineTarget) {
+        var targetSelector = normalizeTargetSelector(scriptTag.dataset.inklineTarget);
+        if (targetSelector && targetSelector[0] === '#') {
+          container.id = targetSelector.slice(1);
+          if (!scriptTag.id) {
+            scriptTag.id = container.id + '-script';
+          }
+        }
+      }
       if (scriptTag && scriptTag.parentNode) {
         scriptTag.parentNode.insertBefore(container, scriptTag.nextSibling);
       } else {
@@ -58,7 +81,7 @@
   function renderLoading(container) {
     container.innerHTML = '';
     var p = document.createElement('p');
-    p.textContent = 'Loading outage events...';
+    p.textContent = 'Loading events...';
     container.appendChild(p);
   }
 
@@ -69,16 +92,10 @@
     container.appendChild(p);
   }
 
-  function renderList(container, config, names) {
+  function renderList(container, config, events) {
     container.innerHTML = '';
 
-    if (config.title) {
-      var h = document.createElement('h3');
-      h.textContent = config.title;
-      container.appendChild(h);
-    }
-
-    if (!names.length) {
+    if (!events.length) {
       var empty = document.createElement('p');
       empty.textContent = config.emptyText;
       container.appendChild(empty);
@@ -86,9 +103,52 @@
     }
 
     var ul = document.createElement('ul');
-    for (var i = 0; i < names.length; i += 1) {
+    for (var i = 0; i < events.length; i += 1) {
+      var eventItem = events[i];
       var li = document.createElement('li');
-      li.textContent = names[i];
+      var title = document.createElement('div');
+      title.textContent = eventItem.title || 'Untitled Event';
+      li.appendChild(title);
+
+      var details = document.createElement('ul');
+      if (eventItem.description) {
+        var descLi = document.createElement('li');
+        descLi.textContent = 'Description: ' + eventItem.description;
+        details.appendChild(descLi);
+      }
+      if (eventItem.eventDateTime) {
+        var dateLi = document.createElement('li');
+        dateLi.textContent = 'Event Date/Time: ' + eventItem.eventDateTime;
+        details.appendChild(dateLi);
+      }
+      if (eventItem.updatedAt) {
+        var updatedLi = document.createElement('li');
+        updatedLi.textContent = 'Last Updated: ' + eventItem.updatedAt;
+        details.appendChild(updatedLi);
+      }
+
+      if (details.childNodes.length) {
+        li.appendChild(details);
+      }
+      ul.appendChild(li);
+    }
+    container.appendChild(ul);
+  }
+
+  function renderTemplateList(container, config, records, template) {
+    container.innerHTML = '';
+
+    if (!records.length) {
+      var empty = document.createElement('p');
+      empty.textContent = config.emptyText;
+      container.appendChild(empty);
+      return;
+    }
+
+    var ul = document.createElement('ul');
+    for (var i = 0; i < records.length; i += 1) {
+      var li = document.createElement('li');
+      li.innerHTML = buildTemplateHtml(records[i], template, config);
       ul.appendChild(li);
     }
     container.appendChild(ul);
@@ -116,9 +176,9 @@
     return null;
   }
 
-  function extractName(record, propertyKey) {
-    if (!record) return null;
-    var shortKey = propertyKey.split('.').pop();
+  function extractField(record, fieldKey) {
+    if (!record || !fieldKey) return null;
+    var shortKey = fieldKey.split('.').pop();
     var candidates = [
       record.properties,
       record.propertyValues,
@@ -131,22 +191,99 @@
 
     for (var i = 0; i < candidates.length; i += 1) {
       var obj = candidates[i];
-      if (obj && Object.prototype.hasOwnProperty.call(obj, propertyKey)) {
-        return obj[propertyKey];
+      if (obj && Object.prototype.hasOwnProperty.call(obj, fieldKey)) {
+        return obj[fieldKey];
       }
       if (obj && Object.prototype.hasOwnProperty.call(obj, shortKey)) {
         return obj[shortKey];
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(record, propertyKey)) return record[propertyKey];
+    if (Object.prototype.hasOwnProperty.call(record, fieldKey)) return record[fieldKey];
     if (Object.prototype.hasOwnProperty.call(record, shortKey)) return record[shortKey];
 
-    if (record.name) return record.name;
-    if (record.title) return record.title;
-    if (record.displayName) return record.displayName;
-
     return null;
+  }
+
+  function extractUpdatedAt(record, fieldKey) {
+    var fromField = extractField(record, fieldKey);
+    if (fromField) return fromField;
+    if (record && record.updatedAt) return record.updatedAt;
+    if (record && record.updated_at) return record.updated_at;
+    if (record && record.meta && record.meta.updatedAt) return record.meta.updatedAt;
+    if (record && record.meta && record.meta.updated_at) return record.meta.updated_at;
+    return null;
+  }
+
+  function formatEventDateTime(dateValue, hourValue, minutesValue, ampmValue) {
+    if (!dateValue && !hourValue && !minutesValue && !ampmValue) return '';
+    var dateText = dateValue ? String(dateValue) : '';
+    var hourText = hourValue != null ? String(hourValue) : '';
+    var minutesText = minutesValue != null ? String(minutesValue) : '';
+    if (minutesText && minutesText.length === 1) {
+      minutesText = '0' + minutesText;
+    }
+    var timeParts = [];
+    if (hourText) timeParts.push(hourText);
+    if (minutesText) timeParts.push(minutesText);
+    var timeText = timeParts.length ? timeParts.join(':') : '';
+    if (ampmValue) {
+      timeText = timeText ? (timeText + ' ' + String(ampmValue)) : String(ampmValue);
+    }
+    if (dateText && timeText) return dateText + ' ' + timeText;
+    return dateText || timeText;
+  }
+
+  function formatDateTimeValue(value) {
+    if (!value) return '';
+    var date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleString();
+    }
+    return String(value);
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function getTokenValue(record, token, config) {
+    if (token === 'updatedAt' || token === 'updated_at') {
+      var updated = extractUpdatedAt(record, config.updatedAtKey);
+      return updated ? formatDateTimeValue(updated) : '';
+    }
+    if (token === 'event_datetime') {
+      return formatEventDateTime(
+        extractField(record, config.dateKey),
+        extractField(record, config.hourKey),
+        extractField(record, config.minutesKey),
+        extractField(record, config.ampmKey)
+      );
+    }
+    var value = extractField(record, token);
+    if (value == null) return '';
+    return value;
+  }
+
+  function buildTemplateHtml(record, template, config) {
+    return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, function (match, token) {
+      var rawValue = getTokenValue(record, token, config);
+      if (rawValue == null) return '';
+      return escapeHtml(rawValue);
+    });
+  }
+
+  async function loadTemplate(url) {
+    var response = await fetch(url, { method: 'GET', mode: 'cors' });
+    if (!response.ok) {
+      throw new Error('Template request failed (' + response.status + ').');
+    }
+    return response.text();
   }
 
   async function apiRequest(config, payload) {
@@ -234,16 +371,35 @@
 
     try {
       var records = await fetchAllRecords(config);
-      var names = [];
 
-      for (var i = 0; i < records.length; i += 1) {
-        var name = extractName(records[i], config.propertyKey);
-        if (name) names.push(String(name));
+      if (config.templateUrl) {
+        var template = await loadTemplate(config.templateUrl);
+        renderTemplateList(container, config, records, template);
+      } else {
+        var events = [];
+
+        for (var i = 0; i < records.length; i += 1) {
+          var record = records[i];
+          var title = extractField(record, config.titleKey);
+          var description = extractField(record, config.descriptionKey);
+          var dateValue = extractField(record, config.dateKey);
+          var hourValue = extractField(record, config.hourKey);
+          var minutesValue = extractField(record, config.minutesKey);
+          var ampmValue = extractField(record, config.ampmKey);
+          var updatedAtValue = extractUpdatedAt(record, config.updatedAtKey);
+
+          events.push({
+            title: title ? String(title) : '',
+            description: description ? String(description) : '',
+            eventDateTime: formatEventDateTime(dateValue, hourValue, minutesValue, ampmValue),
+            updatedAt: updatedAtValue ? formatDateTimeValue(updatedAtValue) : ''
+          });
+        }
+
+        renderList(container, config, events);
       }
-
-      renderList(container, config, names);
     } catch (error) {
-      renderError(container, 'Unable to load outage events: ' + error.message);
+      renderError(container, 'Unable to load events: ' + error.message);
       if (window && window.console && console.error) {
         console.error('GHL Outage Events Widget error:', error);
       }
