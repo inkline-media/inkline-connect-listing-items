@@ -195,8 +195,14 @@
   function extractCreatedAt(record) {
     if (record && record.createdAt) return record.createdAt;
     if (record && record.created_at) return record.created_at;
+    if (record && record.createdOn) return record.createdOn;
+    if (record && record.created_on) return record.created_on;
+    if (record && record.createdTime) return record.createdTime;
+    if (record && record.created_time) return record.created_time;
     if (record && record.meta && record.meta.createdAt) return record.meta.createdAt;
     if (record && record.meta && record.meta.created_at) return record.meta.created_at;
+    if (record && record.meta && record.meta.createdOn) return record.meta.createdOn;
+    if (record && record.meta && record.meta.created_on) return record.meta.created_on;
     return null;
   }
 
@@ -354,6 +360,14 @@
 
     try {
       var records = await fetchAllRecords(config);
+      if (config.debug && records && records.length) {
+        var first = records[0] || {};
+        var meta = first.meta || {};
+        logDebug(config, 'First record keys', Object.keys(first));
+        logDebug(config, 'First record meta keys', Object.keys(meta));
+        logDebug(config, 'First record createdAt', extractCreatedAt(first));
+        logDebug(config, 'First record updatedAt', extractUpdatedAt(first));
+      }
 
       var template = await loadTemplate(config.templateUrl);
       renderTemplateList(container, config, records, template);
