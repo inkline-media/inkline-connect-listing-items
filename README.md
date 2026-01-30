@@ -32,6 +32,8 @@ Example embed:
   data-inkline-target="#inkline-listing-grid__service-status"
   data-inkline-page-limit="100"
   data-inkline-max-pages="20"
+  data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
+  data-inkline-sort-order="desc"
 ></script>
 ```
 
@@ -80,6 +82,8 @@ Example template:
 | `data-inkline-target` | No | CSS selector for container | (script‑adjacent container) |
 | `data-inkline-page-limit` | No | Records per page | `100` |
 | `data-inkline-max-pages` | No | Max pages to request | `20` |
+| `data-inkline-sort-field` | No | Field key to sort by | — |
+| `data-inkline-sort-order` | No | Sort direction (`asc` or `desc`) | `asc` |
 | `data-inkline-base-url` | No | API base URL | `https://services.leadconnectorhq.com` |
 | `data-inkline-version` | No | Inkline Connect API version header | `2021-07-28` |
 

@@ -42,6 +42,8 @@
       ampmKey: dataset.inklineAmpmKey || 'custom_objects.service_status_events.event_ampm',
       updatedAtKey: dataset.inklineUpdatedAtKey || '',
       templateUrl: dataset.inklineTemplateUrl || '',
+      sortField: dataset.inklineSortField || '',
+      sortOrder: (dataset.inklineSortOrder || '').toLowerCase(),
       baseUrl: dataset.inklineBaseUrl || 'https://services.leadconnectorhq.com',
       version: dataset.inklineVersion || '2021-07-28',
       target: normalizeTargetSelector(dataset.inklineTarget || ''),
@@ -339,6 +341,13 @@
         page: page,
         pageLimit: config.pageLimit
       };
+
+      if (config.sortField) {
+        payload.sort = [{
+          field: config.sortField,
+          direction: config.sortOrder === 'desc' ? 'desc' : 'asc'
+        }];
+      }
 
       var responseData = await apiRequest(config, payload);
 
