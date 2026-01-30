@@ -8,6 +8,7 @@ A lightweight, embeddable JavaScript widget for Inkline Connect pages that fetch
 - Uses a simple HTML template for rendering each record
 - Tokens map directly to custom object field keys
 - Supports record `updatedAt` / `updated_at`
+- Supports record `createdAt` / `created_at`
 - Works in Inkline Connect Custom Code elements
 
 ## Quick Start
@@ -23,7 +24,7 @@ Example embed:
   id="inkline-listing-grid__service-status"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.service_status_events"
-  data-inkline-template-url="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/templates/service-status-event.html"
+  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
 ></div>
@@ -39,7 +40,7 @@ Example embed:
 </script>
 
 <script
-  src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/inkline-listing-grid.js?v=1"
+  src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"
 ></script>
 ```
 
@@ -95,15 +96,19 @@ You can set shared settings globally with a small inline script:
 
 ## Configuration (Script `data-*` Attributes)
 
+If you prefer not to use `window.InklineListingConfig`, you can provide the same values on the script tag.
+
 | Attribute | Required | Description | Default |
 |---|---|---|---|
-| `data-inkline-token` | Yes | API access token (read‑only OK) | — |
-| `data-inkline-location-id` | Yes | Location ID | — |
+| `data-inkline-token` | Yes* | API access token (read‑only OK) | — |
+| `data-inkline-location-id` | Yes* | Location ID | — |
 | `data-inkline-page-limit` | No | Records per page | `100` |
 | `data-inkline-max-pages` | No | Max pages to request | `20` |
 | `data-inkline-base-url` | No | API base URL | `https://services.leadconnectorhq.com` |
 | `data-inkline-version` | No | Inkline Connect API version header | `2021-07-28` |
 | `data-inkline-debug` | No | Enable console debug logs (`true` or `false`) | `false` |
+
+*Required if not provided via `window.InklineListingConfig`.
 
 ## Configuration (Listing Block `data-*` Attributes)
 
@@ -115,6 +120,8 @@ You can set shared settings globally with a small inline script:
 | `data-inkline-sort-field` | No | Field key to sort by | — |
 | `data-inkline-sort-order` | No | Sort direction (`asc` or `desc`) | `asc` |
 
+The template URL can be defined per listing or globally via `window.InklineListingConfig.templateUrl`. Each listing block can override the global template if needed.
+
 ## Multiple Listings on One Page
 
 To avoid loading the JS multiple times, include the script **once** with shared settings (token, location, paging), then create multiple listing blocks with `data-inkline-listing` and per‑listing overrides.
@@ -124,7 +131,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   id="inkline-listing-grid__status"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.service_status_events"
-  data-inkline-template-url="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/templates/service-status-event.html"
+  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
 ></div>
@@ -133,7 +140,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   id="inkline-listing-grid__announcements"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.announcements"
-  data-inkline-template-url="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/templates/announcement.html"
+  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/announcement.html"
   data-inkline-sort-field="custom_objects.announcements.published_at"
   data-inkline-sort-order="asc"
 ></div>
@@ -145,7 +152,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   };
 </script>
 
-<script src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/inkline-listing-grid.js?v=1"></script>
+<script src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"></script>
 ```
 
 ## Notes & Troubleshooting
