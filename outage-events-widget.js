@@ -5,77 +5,54 @@
     if (document.currentScript) {
       return document.currentScript;
     }
-    var scripts = document.querySelectorAll('script[data-inkline-widget="outage-events"], script[data-inkline-widget="service-status-events"], script[data-inkline-widget="inkline-listing-grid"], script[data-inkline-target]');
+    var scripts = document.querySelectorAll('script[data-inkline-token], script[data-inkline-location-id], script[data-inkline-base-url], script[data-inkline-version]');
     if (scripts.length > 0) {
       return scripts[scripts.length - 1];
     }
     return null;
   }
 
-  function normalizeTargetSelector(target) {
-    if (!target) return '';
-    if (target[0] === '#' || target[0] === '.' || target.indexOf(' ') !== -1) {
-      return target;
-    }
-    return '#' + target;
-  }
-
-  function readConfig(script) {
-    var dataset = (script && script.dataset) ? script.dataset : {};
-    var pageLimit = parseInt(dataset.inklinePageLimit || '100', 10);
+  function readConfigFromDataset(dataset, defaults) {
+    var source = dataset || {};
+    var pageLimit = parseInt(source.inklinePageLimit || (defaults && defaults.pageLimit) || '100', 10);
     if (!Number.isFinite(pageLimit) || pageLimit <= 0) {
       pageLimit = 100;
     }
-    var maxPages = parseInt(dataset.inklineMaxPages || '20', 10);
+    var maxPages = parseInt(source.inklineMaxPages || (defaults && defaults.maxPages) || '20', 10);
     if (!Number.isFinite(maxPages) || maxPages <= 0) {
       maxPages = 20;
     }
     return {
-      apiToken: dataset.inklineToken || '',
-      locationId: dataset.inklineLocationId || '',
-      schemaKey: dataset.inklineSchemaKey || 'custom_objects.service_status_events',
-      titleKey: dataset.inklineTitleKey || 'custom_objects.service_status_events.event_title',
-      descriptionKey: dataset.inklineDescriptionKey || 'custom_objects.service_status_events.event_description',
-      dateKey: dataset.inklineDateKey || 'custom_objects.service_status_events.event_datetime',
-      hourKey: dataset.inklineHourKey || 'custom_objects.service_status_events.event_hour',
-      minutesKey: dataset.inklineMinutesKey || 'custom_objects.service_status_events.event_minutes',
-      ampmKey: dataset.inklineAmpmKey || 'custom_objects.service_status_events.event_ampm',
-      updatedAtKey: dataset.inklineUpdatedAtKey || '',
-      templateUrl: dataset.inklineTemplateUrl || '',
-      sortField: dataset.inklineSortField || '',
-      sortOrder: (dataset.inklineSortOrder || '').toLowerCase(),
-      baseUrl: dataset.inklineBaseUrl || 'https://services.leadconnectorhq.com',
-      version: dataset.inklineVersion || '2021-07-28',
-      target: normalizeTargetSelector(dataset.inklineTarget || ''),
-      emptyText: dataset.inklineEmptyText || 'No outage events found.',
+      apiToken: source.inklineToken || (defaults && defaults.apiToken) || '',
+      locationId: source.inklineLocationId || (defaults && defaults.locationId) || '',
+      schemaKey: source.inklineSchemaKey || (defaults && defaults.schemaKey) || 'custom_objects.service_status_events',
+      templateUrl: source.inklineTemplateUrl || (defaults && defaults.templateUrl) || '',
+      sortField: source.inklineSortField || (defaults && defaults.sortField) || '',
+      sortOrder: (source.inklineSortOrder || (defaults && defaults.sortOrder) || '').toLowerCase(),
+      baseUrl: source.inklineBaseUrl || (defaults && defaults.baseUrl) || 'https://services.leadconnectorhq.com',
+      version: source.inklineVersion || (defaults && defaults.version) || '2021-07-28',
+      emptyText: source.inklineEmptyText || (defaults && defaults.emptyText) || 'No outage events found.',
       maxPages: maxPages,
       pageLimit: pageLimit
     };
   }
 
-  function ensureContainer(config) {
-    var container = null;
-    if (config.target) {
-      container = document.querySelector(config.target);
+  function readConfig(script) {
+    var dataset = (script && script.dataset) ? script.dataset : {};
+    return readConfigFromDataset(dataset, null);
+  }
+
+  function ensureContainer(listingElement) {
+    if (listingElement) {
+      return listingElement;
     }
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'inkline-listing-grid';
-      var scriptTag = findScriptTag();
-      if (scriptTag && scriptTag.dataset && scriptTag.dataset.inklineTarget) {
-        var targetSelector = normalizeTargetSelector(scriptTag.dataset.inklineTarget);
-        if (targetSelector && targetSelector[0] === '#') {
-          container.id = targetSelector.slice(1);
-          if (!scriptTag.id) {
-            scriptTag.id = container.id + '-script';
-          }
-        }
-      }
-      if (scriptTag && scriptTag.parentNode) {
-        scriptTag.parentNode.insertBefore(container, scriptTag.nextSibling);
-      } else {
-        document.body.appendChild(container);
-      }
+    var container = document.createElement('div');
+    container.id = 'inkline-listing-grid';
+    var scriptTag = findScriptTag();
+    if (scriptTag && scriptTag.parentNode) {
+      scriptTag.parentNode.insertBefore(container, scriptTag.nextSibling);
+    } else {
+      document.body.appendChild(container);
     }
     return container;
   }
@@ -92,49 +69,6 @@
     var p = document.createElement('p');
     p.textContent = message;
     container.appendChild(p);
-  }
-
-  function renderList(container, config, events) {
-    container.innerHTML = '';
-
-    if (!events.length) {
-      var empty = document.createElement('p');
-      empty.textContent = config.emptyText;
-      container.appendChild(empty);
-      return;
-    }
-
-    var ul = document.createElement('ul');
-    for (var i = 0; i < events.length; i += 1) {
-      var eventItem = events[i];
-      var li = document.createElement('li');
-      var title = document.createElement('div');
-      title.textContent = eventItem.title || 'Untitled Event';
-      li.appendChild(title);
-
-      var details = document.createElement('ul');
-      if (eventItem.description) {
-        var descLi = document.createElement('li');
-        descLi.textContent = 'Description: ' + eventItem.description;
-        details.appendChild(descLi);
-      }
-      if (eventItem.eventDateTime) {
-        var dateLi = document.createElement('li');
-        dateLi.textContent = 'Event Date/Time: ' + eventItem.eventDateTime;
-        details.appendChild(dateLi);
-      }
-      if (eventItem.updatedAt) {
-        var updatedLi = document.createElement('li');
-        updatedLi.textContent = 'Last Updated: ' + eventItem.updatedAt;
-        details.appendChild(updatedLi);
-      }
-
-      if (details.childNodes.length) {
-        li.appendChild(details);
-      }
-      ul.appendChild(li);
-    }
-    container.appendChild(ul);
   }
 
   function renderTemplateList(container, config, records, template) {
@@ -207,9 +141,7 @@
     return null;
   }
 
-  function extractUpdatedAt(record, fieldKey) {
-    var fromField = extractField(record, fieldKey);
-    if (fromField) return fromField;
+  function extractUpdatedAt(record) {
     if (record && record.updatedAt) return record.updatedAt;
     if (record && record.updated_at) return record.updated_at;
     if (record && record.meta && record.meta.updatedAt) return record.meta.updatedAt;
@@ -217,23 +149,12 @@
     return null;
   }
 
-  function formatEventDateTime(dateValue, hourValue, minutesValue, ampmValue) {
-    if (!dateValue && !hourValue && !minutesValue && !ampmValue) return '';
-    var dateText = dateValue ? String(dateValue) : '';
-    var hourText = hourValue != null ? String(hourValue) : '';
-    var minutesText = minutesValue != null ? String(minutesValue) : '';
-    if (minutesText && minutesText.length === 1) {
-      minutesText = '0' + minutesText;
-    }
-    var timeParts = [];
-    if (hourText) timeParts.push(hourText);
-    if (minutesText) timeParts.push(minutesText);
-    var timeText = timeParts.length ? timeParts.join(':') : '';
-    if (ampmValue) {
-      timeText = timeText ? (timeText + ' ' + String(ampmValue)) : String(ampmValue);
-    }
-    if (dateText && timeText) return dateText + ' ' + timeText;
-    return dateText || timeText;
+  function extractCreatedAt(record) {
+    if (record && record.createdAt) return record.createdAt;
+    if (record && record.created_at) return record.created_at;
+    if (record && record.meta && record.meta.createdAt) return record.meta.createdAt;
+    if (record && record.meta && record.meta.created_at) return record.meta.created_at;
+    return null;
   }
 
   function formatDateTimeValue(value) {
@@ -256,16 +177,12 @@
 
   function getTokenValue(record, token, config) {
     if (token === 'updatedAt' || token === 'updated_at') {
-      var updated = extractUpdatedAt(record, config.updatedAtKey);
+      var updated = extractUpdatedAt(record);
       return updated ? formatDateTimeValue(updated) : '';
     }
-    if (token === 'event_datetime') {
-      return formatEventDateTime(
-        extractField(record, config.dateKey),
-        extractField(record, config.hourKey),
-        extractField(record, config.minutesKey),
-        extractField(record, config.ampmKey)
-      );
+    if (token === 'createdAt' || token === 'created_at') {
+      var created = extractCreatedAt(record);
+      return created ? formatDateTimeValue(created) : '';
     }
     var value = extractField(record, token);
     if (value == null) return '';
@@ -366,13 +283,16 @@
     return records;
   }
 
-  async function init() {
-    var scriptTag = findScriptTag();
-    var config = readConfig(scriptTag);
-    var container = ensureContainer(config);
+  async function initListing(config, listingElement) {
+    var container = ensureContainer(listingElement);
 
     if (!config.apiToken || !config.locationId || !config.schemaKey) {
       renderError(container, 'Missing required configuration: api token, location id, or schema key.');
+      return;
+    }
+
+    if (!config.templateUrl) {
+      renderError(container, 'Missing required configuration: template URL.');
       return;
     }
 
@@ -381,37 +301,30 @@
     try {
       var records = await fetchAllRecords(config);
 
-      if (config.templateUrl) {
-        var template = await loadTemplate(config.templateUrl);
-        renderTemplateList(container, config, records, template);
-      } else {
-        var events = [];
-
-        for (var i = 0; i < records.length; i += 1) {
-          var record = records[i];
-          var title = extractField(record, config.titleKey);
-          var description = extractField(record, config.descriptionKey);
-          var dateValue = extractField(record, config.dateKey);
-          var hourValue = extractField(record, config.hourKey);
-          var minutesValue = extractField(record, config.minutesKey);
-          var ampmValue = extractField(record, config.ampmKey);
-          var updatedAtValue = extractUpdatedAt(record, config.updatedAtKey);
-
-          events.push({
-            title: title ? String(title) : '',
-            description: description ? String(description) : '',
-            eventDateTime: formatEventDateTime(dateValue, hourValue, minutesValue, ampmValue),
-            updatedAt: updatedAtValue ? formatDateTimeValue(updatedAtValue) : ''
-          });
-        }
-
-        renderList(container, config, events);
-      }
+      var template = await loadTemplate(config.templateUrl);
+      renderTemplateList(container, config, records, template);
     } catch (error) {
       renderError(container, 'Unable to load events: ' + error.message);
       if (window && window.console && console.error) {
-        console.error('GHL Outage Events Widget error:', error);
+        console.error('Inkline Listing Grid Widget error:', error);
       }
+    }
+  }
+
+  async function init() {
+    var scriptTag = findScriptTag();
+    var defaults = readConfig(scriptTag);
+    var listingBlocks = document.querySelectorAll('[data-inkline-listing]');
+
+    if (!listingBlocks.length) {
+      await initListing(defaults, null);
+      return;
+    }
+
+    for (var i = 0; i < listingBlocks.length; i += 1) {
+      var block = listingBlocks[i];
+      var mergedConfig = readConfigFromDataset(block.dataset, defaults);
+      await initListing(mergedConfig, block);
     }
   }
 

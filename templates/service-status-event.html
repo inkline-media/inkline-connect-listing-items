@@ -3,6 +3,7 @@
   <ul class="listing-grid-item__details">
     <li>Description: {{ custom_objects.service_status_events.event_description }}</li>
     <li>Event Date/Time: {{ custom_objects.service_status_events.event_datetime }} {{ custom_objects.service_status_events.event_hour }}:{{ custom_objects.service_status_events.event_minutes }} {{ custom_objects.service_status_events.event_ampm }}</li>
+    <li>Created At: {{ createdAt }}</li>
     <li>Last Updated: {{ updatedAt }}</li>
   </ul>
 </div>
