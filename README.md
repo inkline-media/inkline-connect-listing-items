@@ -28,12 +28,17 @@ Example embed:
   data-inkline-sort-order="desc"
 ></div>
 
+<script>
+  window.InklineListingConfig = {
+    token: "YOUR_API_TOKEN",
+    locationId: "YOUR_LOCATION_ID",
+    pageLimit: 100,
+    maxPages: 20
+  };
+</script>
+
 <script
   src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/outage-events-widget.js?v=1"
-  data-inkline-token="YOUR_API_TOKEN"
-  data-inkline-location-id="YOUR_LOCATION_ID"
-  data-inkline-page-limit="100"
-  data-inkline-max-pages="20"
 ></script>
 ```
 
@@ -70,6 +75,21 @@ Example template:
 
 - `{{ updatedAt }}` or `{{ updated_at }}` — record last updated time (if provided by Inkline Connect).
 - `{{ createdAt }}` or `{{ created_at }}` — record created time (if provided by Inkline Connect).
+
+## Configuration (Global Settings)
+
+You can set shared settings globally with a small inline script:
+
+```html
+<script>
+  window.InklineListingConfig = {
+    token: "YOUR_API_TOKEN",
+    locationId: "YOUR_LOCATION_ID",
+    pageLimit: 100,
+    maxPages: 20
+  };
+</script>
+```
 
 ## Configuration (Script `data-*` Attributes)
 
@@ -115,11 +135,14 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   data-inkline-sort-order="asc"
 ></div>
 
-<script
-  src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/outage-events-widget.js?v=1"
-  data-inkline-token="YOUR_API_TOKEN"
-  data-inkline-location-id="YOUR_LOCATION_ID"
-></script>
+<script>
+  window.InklineListingConfig = {
+    token: "YOUR_API_TOKEN",
+    locationId: "YOUR_LOCATION_ID"
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/gh/inkline-media/SRV-VRS-outage-notification-listing@main/outage-events-widget.js?v=1"></script>
 ```
 
 ## Notes & Troubleshooting

@@ -24,6 +24,26 @@
     return null;
   }
 
+  function getGlobalConfigDataset() {
+    if (!window || !window.InklineListingConfig) {
+      return null;
+    }
+    var cfg = window.InklineListingConfig || {};
+    return {
+      inklineToken: cfg.token,
+      inklineLocationId: cfg.locationId,
+      inklineSchemaKey: cfg.schemaKey,
+      inklineTemplateUrl: cfg.templateUrl,
+      inklineSortField: cfg.sortField,
+      inklineSortOrder: cfg.sortOrder,
+      inklinePageLimit: cfg.pageLimit,
+      inklineMaxPages: cfg.maxPages,
+      inklineBaseUrl: cfg.baseUrl,
+      inklineVersion: cfg.version,
+      inklineEmptyText: cfg.emptyText
+    };
+  }
+
   function readConfigFromDataset(dataset, defaults) {
     var source = dataset || {};
     var pageLimit = parseInt(source.inklinePageLimit || (defaults && defaults.pageLimit) || '100', 10);
@@ -330,6 +350,12 @@
       var configScript = findConfigScriptTag();
       if (configScript && configScript !== scriptTag) {
         defaults = readConfig(configScript);
+      }
+    }
+    if (!defaults.apiToken || !defaults.locationId) {
+      var globalDataset = getGlobalConfigDataset();
+      if (globalDataset) {
+        defaults = readConfigFromDataset(globalDataset, defaults);
       }
     }
     var listingBlocks = document.querySelectorAll('[data-inkline-listing]');
