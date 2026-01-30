@@ -16,6 +16,14 @@
     return null;
   }
 
+  function findConfigScriptTag() {
+    var scripts = document.querySelectorAll('script[data-inkline-token], script[data-inkline-location-id]');
+    if (scripts.length > 0) {
+      return scripts[scripts.length - 1];
+    }
+    return null;
+  }
+
   function readConfigFromDataset(dataset, defaults) {
     var source = dataset || {};
     var pageLimit = parseInt(source.inklinePageLimit || (defaults && defaults.pageLimit) || '100', 10);
@@ -318,6 +326,12 @@
   async function init() {
     var scriptTag = findScriptTag();
     var defaults = readConfig(scriptTag);
+    if (!defaults.apiToken || !defaults.locationId) {
+      var configScript = findConfigScriptTag();
+      if (configScript && configScript !== scriptTag) {
+        defaults = readConfig(configScript);
+      }
+    }
     var listingBlocks = document.querySelectorAll('[data-inkline-listing]');
 
     if (!listingBlocks.length) {
