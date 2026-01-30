@@ -14,6 +14,14 @@
 
   function readConfig(script) {
     var dataset = (script && script.dataset) ? script.dataset : {};
+    var pageLimit = parseInt(dataset.ghlPageLimit || '100', 10);
+    if (!Number.isFinite(pageLimit) || pageLimit <= 0) {
+      pageLimit = 100;
+    }
+    var maxPages = parseInt(dataset.ghlMaxPages || '20', 10);
+    if (!Number.isFinite(maxPages) || maxPages <= 0) {
+      maxPages = 20;
+    }
     return {
       apiToken: dataset.ghlToken || '',
       locationId: dataset.ghlLocationId || '',
@@ -24,8 +32,8 @@
       target: dataset.ghlTarget || '',
       title: dataset.ghlTitle || '',
       emptyText: dataset.ghlEmptyText || 'No outage events found.',
-      maxPages: parseInt(dataset.ghlMaxPages || '20', 10),
-      pageLimit: parseInt(dataset.ghlPageLimit || '100', 10)
+      maxPages: maxPages,
+      pageLimit: pageLimit
     };
   }
 
@@ -211,11 +219,6 @@
         payloads.push({
           locationId: config.locationId,
           limit: config.pageLimit
-        });
-        payloads.push({
-          locationId: config.locationId,
-          page: page,
-          pageSize: config.pageLimit
         });
       }
 
