@@ -193,59 +193,24 @@
 
   async function fetchAllRecords(config) {
     var records = [];
-    var cursor = null;
     var page = 1;
     var maxPages = Math.max(1, config.maxPages || 1);
 
     for (var i = 0; i < maxPages; i += 1) {
-      var payloads = [];
+      var payload = {
+        locationId: config.locationId,
+        page: page,
+        pageLimit: config.pageLimit
+      };
 
-      if (cursor) {
-        payloads.push({
-          locationId: config.locationId,
-          pageLimit: config.pageLimit,
-          startAfterId: cursor
-        });
-        payloads.push({
-          locationId: config.locationId,
-          limit: config.pageLimit,
-          startAfterId: cursor
-        });
-      } else {
-        payloads.push({
-          locationId: config.locationId,
-          pageLimit: config.pageLimit
-        });
-        payloads.push({
-          locationId: config.locationId,
-          limit: config.pageLimit
-        });
-      }
-
-      var responseData = null;
-      var lastError = null;
-
-      for (var p = 0; p < payloads.length; p += 1) {
-        try {
-          responseData = await apiRequest(config, payloads[p]);
-          lastError = null;
-          break;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-
-      if (!responseData) {
-        throw lastError || new Error('Unable to fetch records.');
-      }
+      var responseData = await apiRequest(config, payload);
 
       var pageRecords = extractRecords(responseData);
       if (pageRecords.length) {
         records = records.concat(pageRecords);
       }
 
-      cursor = extractNextCursor(responseData);
-      if (!cursor && (!pageRecords || pageRecords.length < config.pageLimit)) {
+      if (!pageRecords || pageRecords.length < config.pageLimit) {
         break;
       }
 
