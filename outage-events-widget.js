@@ -9,6 +9,10 @@
     if (scripts.length > 0) {
       return scripts[scripts.length - 1];
     }
+    var srcScripts = document.querySelectorAll('script[src*="outage-events-widget.js"]');
+    if (srcScripts.length > 0) {
+      return srcScripts[srcScripts.length - 1];
+    }
     return null;
   }
 
