@@ -37,13 +37,11 @@ Example embed:
     debug: true,
     pageSize: 10,
     pageLimit: 100,
-    maxPages: 20
+    maxPages: 20,
   };
 </script>
 
-<script
-  src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"
-></script>
+<script src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"></script>
 ```
 
 ## Template Format
@@ -54,14 +52,18 @@ Example template:
 
 ```html
 <div class="listing-grid-item">
-  <div class="listing-grid-item__title">{{ custom_objects.service_status_events.event_title }}</div>
+  <div class="listing-grid-item__title">
+    {{ custom_objects.service_status_events.event_title }}
+  </div>
   <ul class="listing-grid-item__details">
-    <li>Description: {{ custom_objects.service_status_events.event_description }}</li>
     <li>
-      Event Date/Time:
-      {{ custom_objects.service_status_events.event_datetime }}
-      {{ custom_objects.service_status_events.event_hour }}:{{ custom_objects.service_status_events.event_minutes }}
-      {{ custom_objects.service_status_events.event_ampm }}
+      Description: {{ custom_objects.service_status_events.event_description }}
+    </li>
+    <li>
+      Event Date/Time: {{ custom_objects.service_status_events.event_datetime }}
+      {{ custom_objects.service_status_events.event_hour }}:{{
+      custom_objects.service_status_events.event_minutes }} {{
+      custom_objects.service_status_events.event_ampm }}
     </li>
     <li>Last Updated: {{ updatedAt }}</li>
   </ul>
@@ -91,7 +93,7 @@ You can set shared settings globally with a small inline script:
     locationId: "YOUR_LOCATION_ID",
     debug: true,
     pageLimit: 100,
-    maxPages: 20
+    maxPages: 20,
   };
 </script>
 ```
@@ -100,28 +102,28 @@ You can set shared settings globally with a small inline script:
 
 If you prefer not to use `window.InklineListingConfig`, you can provide the same values on the script tag.
 
-| Attribute | Required | Description | Default |
-|---|---|---|---|
-| `data-inkline-token` | Yes* | API access token (read‑only OK) | — |
-| `data-inkline-location-id` | Yes* | Location ID | — |
-| `data-inkline-page-limit` | No | Records per page | `100` |
-| `data-inkline-max-pages` | No | Max pages to request | `20` |
-| `data-inkline-base-url` | No | API base URL | `https://services.leadconnectorhq.com` |
-| `data-inkline-version` | No | Inkline Connect API version header | `2021-07-28` |
-| `data-inkline-debug` | No | Enable console debug logs (`true` or `false`) | `false` |
+| Attribute                  | Required | Description                                   | Default                                |
+| -------------------------- | -------- | --------------------------------------------- | -------------------------------------- |
+| `data-inkline-token`       | Yes\*    | API access token (read‑only OK)               | —                                      |
+| `data-inkline-location-id` | Yes\*    | Location ID                                   | —                                      |
+| `data-inkline-page-limit`  | No       | Records per page                              | `100`                                  |
+| `data-inkline-max-pages`   | No       | Max pages to request                          | `20`                                   |
+| `data-inkline-base-url`    | No       | API base URL                                  | `https://services.leadconnectorhq.com` |
+| `data-inkline-version`     | No       | Inkline Connect API version header            | `2021-07-28`                           |
+| `data-inkline-debug`       | No       | Enable console debug logs (`true` or `false`) | `false`                                |
 
-*Required if not provided via `window.InklineListingConfig`.
+\*Required if not provided via `window.InklineListingConfig`.
 
 ## Configuration (Listing Block `data-*` Attributes)
 
-| Attribute | Required | Description | Default |
-|---|---|---|---|
-| `data-inkline-listing` | Yes | Marks a listing block | — |
-| `data-inkline-schema-key` | Yes | Custom object schema key | `custom_objects.service_status_events` |
-| `data-inkline-template-url` | Yes | Public URL to template HTML | — |
-| `data-inkline-sort-field` | No | Field key to sort by | — |
-| `data-inkline-sort-order` | No | Sort direction (`asc` or `desc`) | `asc` |
-| `data-inkline-page-size` | No | Items per page in the UI | `10` |
+| Attribute                   | Required | Description                      | Default                                |
+| --------------------------- | -------- | -------------------------------- | -------------------------------------- |
+| `data-inkline-listing`      | Yes      | Marks a listing block            | —                                      |
+| `data-inkline-schema-key`   | Yes      | Custom object schema key         | `custom_objects.service_status_events` |
+| `data-inkline-template-url` | Yes      | Public URL to template HTML      | —                                      |
+| `data-inkline-sort-field`   | No       | Field key to sort by             | —                                      |
+| `data-inkline-sort-order`   | No       | Sort direction (`asc` or `desc`) | `asc`                                  |
+| `data-inkline-page-size`    | No       | Items per page in the UI         | `10`                                   |
 
 The template URL can be defined per listing or globally via `window.InklineListingConfig.templateUrl`. Each listing block can override the global template if needed.
 
@@ -181,7 +183,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
 <script>
   window.InklineListingConfig = {
     token: "YOUR_API_TOKEN",
-    locationId: "YOUR_LOCATION_ID"
+    locationId: "YOUR_LOCATION_ID",
   };
 </script>
 
@@ -197,7 +199,3 @@ To avoid loading the JS multiple times, include the script **once** with shared 
 ## Security
 
 Your API token is embedded client‑side. Use a read‑only token and rotate it if needed. If you require full security, proxy the API call server‑side.
-
-## License
-
-MIT (add your preferred license here).
