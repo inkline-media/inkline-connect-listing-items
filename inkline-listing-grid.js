@@ -101,10 +101,22 @@
   }
 
   function renderLoading(container) {
-    container.innerHTML = '';
+    var existing = container.querySelector('[data-inkline-loading]');
+    if (existing) {
+      existing.textContent = 'Loading data...';
+      return;
+    }
     var p = document.createElement('p');
-    p.textContent = 'Loading events...';
+    p.textContent = 'Loading data...';
+    p.setAttribute('data-inkline-loading', 'true');
     container.appendChild(p);
+  }
+
+  function removeLoading(container) {
+    var loading = container.querySelector('[data-inkline-loading]');
+    if (loading) {
+      loading.parentNode.removeChild(loading);
+    }
   }
 
   function renderError(container, message) {
@@ -115,6 +127,8 @@
   }
 
   function renderTemplateList(container, config, records, template) {
+    removeLoading(container);
+
     if (!records.length) {
       var tag = container.tagName ? container.tagName.toLowerCase() : '';
       var isTableTag = tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
@@ -375,7 +389,8 @@
       var template = await loadTemplate(config.templateUrl);
       renderTemplateList(container, config, records, template);
     } catch (error) {
-      renderError(container, 'Unable to load events: ' + error.message);
+      removeLoading(container);
+      renderError(container, 'Unable to load data: ' + error.message);
       if (window && window.console && console.error) {
         console.error('Inkline Listing Grid Widget error:', error);
       }
