@@ -140,12 +140,23 @@
     document.head.appendChild(link);
   }
 
+  function ensureLoadingStyles() {
+    if (document.querySelector('style[data-inkline-loading-style]')) return;
+    var style = document.createElement('style');
+    style.setAttribute('data-inkline-loading-style', 'true');
+    style.textContent = ''
+      + '.inkline-loading{display:flex;align-items:center;justify-content:center;width:100%;min-height:80px;}'
+      + '.inkline-loading__text{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}';
+    document.head.appendChild(style);
+  }
+
   function renderLoading(container) {
     ensureFontAwesome();
+    ensureLoadingStyles();
     var existing = container.querySelector('[data-inkline-loading]');
     if (existing) {
       if (hasFontAwesome()) {
-        existing.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+        existing.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="inkline-loading__text">Loading data...</span>';
       } else {
         existing.textContent = 'Loading data...';
       }
@@ -153,8 +164,9 @@
     }
     var wrapper = document.createElement('div');
     wrapper.setAttribute('data-inkline-loading', 'true');
+    wrapper.className = 'inkline-loading';
     if (hasFontAwesome()) {
-      wrapper.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+      wrapper.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="inkline-loading__text">Loading data...</span>';
     } else {
       wrapper.textContent = 'Loading data...';
     }
