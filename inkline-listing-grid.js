@@ -115,22 +115,23 @@
   }
 
   function renderTemplateList(container, config, records, template) {
-    container.innerHTML = '';
-
     if (!records.length) {
-      var empty = document.createElement('p');
-      empty.textContent = config.emptyText;
-      container.appendChild(empty);
+      var tag = container.tagName ? container.tagName.toLowerCase() : '';
+      var isTableTag = tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
+      if (!container.childNodes.length && config.emptyText && !isTableTag) {
+        var empty = document.createElement('p');
+        empty.textContent = config.emptyText;
+        container.appendChild(empty);
+      }
       return;
     }
 
-    var ul = document.createElement('ul');
     for (var i = 0; i < records.length; i += 1) {
-      var li = document.createElement('li');
-      li.innerHTML = buildTemplateHtml(records[i], template, config);
-      ul.appendChild(li);
+      var html = buildTemplateHtml(records[i], template, config);
+      var wrapper = document.createElement('template');
+      wrapper.innerHTML = html.trim();
+      container.appendChild(wrapper.content.cloneNode(true));
     }
-    container.appendChild(ul);
   }
 
   function extractRecords(data) {

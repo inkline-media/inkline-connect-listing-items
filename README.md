@@ -46,7 +46,7 @@ Example embed:
 
 ## Template Format
 
-Your template file should contain **HTML for a single record**. The widget wraps each record inside a `<li>` element, so keep your template markup self‑contained.
+Your template file should contain **HTML for a single record**. The widget appends each rendered template directly into the target element, so your template should match the container type (e.g., `<div>` items inside a `<div>`, or `<tr>` rows inside a `<tbody>`).
 
 Example template:
 
@@ -121,6 +121,34 @@ If you prefer not to use `window.InklineListingConfig`, you can provide the same
 | `data-inkline-sort-order` | No | Sort direction (`asc` or `desc`) | `asc` |
 
 The template URL can be defined per listing or globally via `window.InklineListingConfig.templateUrl`. Each listing block can override the global template if needed.
+
+### Target Elements
+
+Listing blocks can be **any HTML element**. Existing children (such as a table header row) are preserved, and new items are appended after them.
+
+Example table:
+
+```html
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Date</th>
+      <th>Created</th>
+      <th>Updated</th>
+    </tr>
+  </thead>
+  <tbody
+    data-inkline-listing
+    data-inkline-schema-key="custom_objects.service_status_events"
+    data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event-row.html"
+    data-inkline-sort-field="event_datetime"
+    data-inkline-sort-order="desc"
+  ></tbody>
+</table>
+```
+
+`service-status-event-row.html` would contain a single `<tr>...</tr>`.
 
 ## Multiple Listings on One Page
 
