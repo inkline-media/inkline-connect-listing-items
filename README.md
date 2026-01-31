@@ -24,7 +24,7 @@ Example embed:
   id="inkline-listing-grid__service-status"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.service_status_events"
-  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
+  data-inkline-template-url="https://inkline-media.github.io/inkline-connect-listing-items/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
   data-inkline-page-size="10"
@@ -41,7 +41,7 @@ Example embed:
   };
 </script>
 
-<script src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"></script>
+<script src="https://inkline-media.github.io/inkline-connect-listing-items/inkline-listing-grid.js?v=1"></script>
 ```
 
 ## Template Format
@@ -146,7 +146,7 @@ Example table:
   <tbody
     data-inkline-listing
     data-inkline-schema-key="custom_objects.service_status_events"
-    data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event-row.html"
+    data-inkline-template-url="https://inkline-media.github.io/inkline-connect-listing-items/templates/service-status-event-row.html"
     data-inkline-sort-field="event_datetime"
     data-inkline-sort-order="desc"
   ></tbody>
@@ -164,7 +164,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   id="inkline-listing-grid__status"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.service_status_events"
-  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
+  data-inkline-template-url="https://inkline-media.github.io/inkline-connect-listing-items/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
   data-inkline-page-size="10"
@@ -174,7 +174,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   id="inkline-listing-grid__announcements"
   data-inkline-listing
   data-inkline-schema-key="custom_objects.announcements"
-  data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/announcement.html"
+  data-inkline-template-url="https://inkline-media.github.io/inkline-connect-listing-items/templates/announcement.html"
   data-inkline-sort-field="custom_objects.announcements.published_at"
   data-inkline-sort-order="asc"
   data-inkline-page-size="10"
@@ -187,7 +187,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   };
 </script>
 
-<script src="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/inkline-listing-grid.js?v=1"></script>
+<script src="https://inkline-media.github.io/inkline-connect-listing-items/inkline-listing-grid.js?v=1"></script>
 ```
 
 ## Notes & Troubleshooting
