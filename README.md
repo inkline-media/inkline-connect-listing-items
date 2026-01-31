@@ -27,6 +27,7 @@ Example embed:
   data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
+  data-inkline-page-size="10"
 ></div>
 
 <script>
@@ -34,6 +35,7 @@ Example embed:
     token: "YOUR_API_TOKEN",
     locationId: "YOUR_LOCATION_ID",
     debug: true,
+    pageSize: 10,
     pageLimit: 100,
     maxPages: 20
   };
@@ -119,6 +121,7 @@ If you prefer not to use `window.InklineListingConfig`, you can provide the same
 | `data-inkline-template-url` | Yes | Public URL to template HTML | — |
 | `data-inkline-sort-field` | No | Field key to sort by | — |
 | `data-inkline-sort-order` | No | Sort direction (`asc` or `desc`) | `asc` |
+| `data-inkline-page-size` | No | Items per page in the UI | `10` |
 
 The template URL can be defined per listing or globally via `window.InklineListingConfig.templateUrl`. Each listing block can override the global template if needed.
 
@@ -162,6 +165,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/service-status-event.html"
   data-inkline-sort-field="custom_objects.service_status_events.event_datetime"
   data-inkline-sort-order="desc"
+  data-inkline-page-size="10"
 ></div>
 
 <div
@@ -171,6 +175,7 @@ To avoid loading the JS multiple times, include the script **once** with shared 
   data-inkline-template-url="https://inkline-media.github.io/SRV-VRS-outage-notification-listing/templates/announcement.html"
   data-inkline-sort-field="custom_objects.announcements.published_at"
   data-inkline-sort-order="asc"
+  data-inkline-page-size="10"
 ></div>
 
 <script>

@@ -9,7 +9,7 @@
     if (scripts.length > 0) {
       return scripts[scripts.length - 1];
     }
-    var srcScripts = document.querySelectorAll('script[src*="outage-events-widget.js"]');
+    var srcScripts = document.querySelectorAll('script[src*="inkline-listing-grid.js"]');
     if (srcScripts.length > 0) {
       return srcScripts[srcScripts.length - 1];
     }
@@ -36,6 +36,7 @@
       inklineTemplateUrl: cfg.templateUrl,
       inklineSortField: cfg.sortField,
       inklineSortOrder: cfg.sortOrder,
+      inklinePageSize: cfg.pageSize,
       inklinePageLimit: cfg.pageLimit,
       inklineMaxPages: cfg.maxPages,
       inklineBaseUrl: cfg.baseUrl,
@@ -55,6 +56,10 @@
     if (!Number.isFinite(maxPages) || maxPages <= 0) {
       maxPages = 20;
     }
+    var pageSize = parseInt(source.inklinePageSize || (defaults && defaults.pageSize) || '10', 10);
+    if (!Number.isFinite(pageSize) || pageSize <= 0) {
+      pageSize = 10;
+    }
     return {
       apiToken: source.inklineToken || (defaults && defaults.apiToken) || '',
       locationId: source.inklineLocationId || (defaults && defaults.locationId) || '',
@@ -67,6 +72,7 @@
       emptyText: source.inklineEmptyText || (defaults && defaults.emptyText) || 'No outage events found.',
       maxPages: maxPages,
       pageLimit: pageLimit,
+      pageSize: pageSize,
       debug: source.inklineDebug === 'true' || source.inklineDebug === true || (defaults && defaults.debug) || false
     };
   }
@@ -100,20 +106,44 @@
     return container;
   }
 
+  function isTableContainer(container) {
+    var tag = container && container.tagName ? container.tagName.toLowerCase() : '';
+    return tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
+  }
+
+  function ensureFontAwesome() {
+    if (document.querySelector('link[data-inkline-fa]')) return;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+    link.setAttribute('data-inkline-fa', 'true');
+    document.head.appendChild(link);
+  }
+
   function renderLoading(container) {
+    ensureFontAwesome();
     var existing = container.querySelector('[data-inkline-loading]');
     if (existing) {
-      existing.textContent = 'Loading data...';
+      existing.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
       return;
     }
-    var p = document.createElement('p');
-    p.textContent = 'Loading data...';
-    p.setAttribute('data-inkline-loading', 'true');
-    container.appendChild(p);
+    var wrapper = document.createElement('div');
+    wrapper.setAttribute('data-inkline-loading', 'true');
+    wrapper.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+    if (isTableContainer(container)) {
+      container.insertAdjacentElement('afterend', wrapper);
+    } else {
+      container.appendChild(wrapper);
+    }
   }
 
   function removeLoading(container) {
     var loading = container.querySelector('[data-inkline-loading]');
+    if (!loading && container.nextSibling && container.nextSibling.nodeType === 1) {
+      if (container.nextSibling.hasAttribute('data-inkline-loading')) {
+        loading = container.nextSibling;
+      }
+    }
     if (loading) {
       loading.parentNode.removeChild(loading);
     }
@@ -126,13 +156,11 @@
     container.appendChild(p);
   }
 
-  function renderTemplateList(container, config, records, template) {
+  function renderTemplateList(container, config, records, template, pageIndex) {
     removeLoading(container);
 
     if (!records.length) {
-      var tag = container.tagName ? container.tagName.toLowerCase() : '';
-      var isTableTag = tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
-      if (!container.childNodes.length && config.emptyText && !isTableTag) {
+      if (!container.childNodes.length && config.emptyText && !isTableContainer(container)) {
         var empty = document.createElement('p');
         empty.textContent = config.emptyText;
         container.appendChild(empty);
@@ -142,12 +170,85 @@
 
     logDebug(config, 'Template preview', template.slice(0, 120));
 
-    for (var i = 0; i < records.length; i += 1) {
-      var html = buildTemplateHtml(records[i], template, config);
+    var start = (pageIndex || 0) * config.pageSize;
+    var end = start + config.pageSize;
+    var pageRecords = records.slice(start, end);
+
+    var existingItems = container.querySelectorAll('[data-inkline-item]');
+    for (var r = 0; r < existingItems.length; r += 1) {
+      existingItems[r].parentNode.removeChild(existingItems[r]);
+    }
+
+    for (var i = 0; i < pageRecords.length; i += 1) {
+      var html = buildTemplateHtml(pageRecords[i], template, config);
       if (html && html.trim()) {
-        container.insertAdjacentHTML('beforeend', html);
+        var wrapper = document.createElement('template');
+        wrapper.innerHTML = html.trim();
+        var fragment = wrapper.content.cloneNode(true);
+        var first = fragment.firstElementChild;
+        if (first) {
+          first.setAttribute('data-inkline-item', 'true');
+        }
+        container.appendChild(fragment);
       }
     }
+  }
+
+  function renderPagination(container, config, totalRecords, onPageChange) {
+    ensureFontAwesome();
+    var totalPages = Math.max(1, Math.ceil(totalRecords / config.pageSize));
+    var existing = container.nextSibling && container.nextSibling.nodeType === 1
+      ? container.nextSibling
+      : null;
+    if (existing && !existing.hasAttribute('data-inkline-pagination')) {
+      existing = null;
+    }
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.setAttribute('data-inkline-pagination', 'true');
+      existing.className = 'inkline-pagination';
+      container.insertAdjacentElement('afterend', existing);
+    }
+
+    if (totalPages <= 1) {
+      existing.innerHTML = '';
+      return;
+    }
+
+    existing.innerHTML = '';
+    var prev = document.createElement('button');
+    prev.type = 'button';
+    prev.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    prev.setAttribute('data-inkline-page', 'prev');
+    existing.appendChild(prev);
+
+    for (var i = 0; i < totalPages; i += 1) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = String(i + 1);
+      btn.setAttribute('data-inkline-page', String(i));
+      if (i === 0) {
+        btn.setAttribute('data-inkline-active', 'true');
+      }
+      existing.appendChild(btn);
+    }
+
+    var next = document.createElement('button');
+    next.type = 'button';
+    next.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    next.setAttribute('data-inkline-page', 'next');
+    existing.appendChild(next);
+
+    existing.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!target) return;
+      if (target.tagName.toLowerCase() === 'i') {
+        target = target.parentNode;
+      }
+      if (!target || !target.hasAttribute('data-inkline-page')) return;
+      var value = target.getAttribute('data-inkline-page');
+      onPageChange(value);
+    });
   }
 
   function extractRecords(data) {
@@ -364,7 +465,8 @@
       sortField: config.sortField,
       sortOrder: config.sortOrder,
       pageLimit: config.pageLimit,
-      maxPages: config.maxPages
+      maxPages: config.maxPages,
+      pageSize: config.pageSize
     });
 
     if (!config.apiToken || !config.locationId || !config.schemaKey) {
@@ -391,7 +493,37 @@
       }
 
       var template = await loadTemplate(config.templateUrl);
-      renderTemplateList(container, config, records, template);
+      var currentPage = 0;
+
+      var updatePage = function (value) {
+        var totalPages = Math.max(1, Math.ceil(records.length / config.pageSize));
+        if (value === 'prev') {
+          currentPage = Math.max(0, currentPage - 1);
+        } else if (value === 'next') {
+          currentPage = Math.min(totalPages - 1, currentPage + 1);
+        } else {
+          var index = parseInt(value, 10);
+          if (!isNaN(index)) currentPage = Math.min(Math.max(index, 0), totalPages - 1);
+        }
+        renderTemplateList(container, config, records, template, currentPage);
+        var pagination = container.nextSibling && container.nextSibling.nodeType === 1
+          ? container.nextSibling
+          : null;
+        if (pagination && pagination.hasAttribute('data-inkline-pagination')) {
+          var buttons = pagination.querySelectorAll('button[data-inkline-page]');
+          for (var i = 0; i < buttons.length; i += 1) {
+            var btn = buttons[i];
+            if (btn.getAttribute('data-inkline-page') === String(currentPage)) {
+              btn.setAttribute('data-inkline-active', 'true');
+            } else {
+              btn.removeAttribute('data-inkline-active');
+            }
+          }
+        }
+      };
+
+      renderTemplateList(container, config, records, template, currentPage);
+      renderPagination(container, config, records.length, updatePage);
     } catch (error) {
       removeLoading(container);
       renderError(container, 'Unable to load data: ' + error.message);
