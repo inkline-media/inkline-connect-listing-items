@@ -326,8 +326,12 @@
       };
 
       if (config.sortField) {
+        var sortField = config.sortField;
+        if (sortField.indexOf('.') !== -1) {
+          sortField = sortField.split('.').pop();
+        }
         payload.sort = [{
-          field: config.sortField,
+          field: sortField,
           direction: config.sortOrder === 'desc' ? 'desc' : 'asc'
         }];
       }
