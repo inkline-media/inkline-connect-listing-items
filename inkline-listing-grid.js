@@ -111,7 +111,27 @@
     return tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
   }
 
+  function hasFontAwesome() {
+    if (window && window.FontAwesome) return true;
+    var links = document.querySelectorAll('link[rel~=\"stylesheet\"]');
+    for (var i = 0; i < links.length; i += 1) {
+      var href = links[i].getAttribute('href') || '';
+      if (href.indexOf('font-awesome') !== -1 || href.indexOf('fontawesome') !== -1) {
+        return true;
+      }
+    }
+    var scripts = document.querySelectorAll('script[src]');
+    for (var j = 0; j < scripts.length; j += 1) {
+      var src = scripts[j].getAttribute('src') || '';
+      if (src.indexOf('font-awesome') !== -1 || src.indexOf('fontawesome') !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function ensureFontAwesome() {
+    if (hasFontAwesome()) return;
     if (document.querySelector('link[data-inkline-fa]')) return;
     var link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -124,12 +144,20 @@
     ensureFontAwesome();
     var existing = container.querySelector('[data-inkline-loading]');
     if (existing) {
-      existing.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+      if (hasFontAwesome()) {
+        existing.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+      } else {
+        existing.textContent = 'Loading data...';
+      }
       return;
     }
     var wrapper = document.createElement('div');
     wrapper.setAttribute('data-inkline-loading', 'true');
-    wrapper.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+    if (hasFontAwesome()) {
+      wrapper.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+    } else {
+      wrapper.textContent = 'Loading data...';
+    }
     if (isTableContainer(container)) {
       container.insertAdjacentElement('afterend', wrapper);
     } else {
