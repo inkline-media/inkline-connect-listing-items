@@ -126,11 +126,13 @@
       return;
     }
 
+    logDebug(config, 'Template preview', template.slice(0, 120));
+
     for (var i = 0; i < records.length; i += 1) {
       var html = buildTemplateHtml(records[i], template, config);
-      var wrapper = document.createElement('template');
-      wrapper.innerHTML = html.trim();
-      container.appendChild(wrapper.content.cloneNode(true));
+      if (html && html.trim()) {
+        container.insertAdjacentHTML('beforeend', html);
+      }
     }
   }
 
