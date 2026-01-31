@@ -234,7 +234,7 @@
     }
   }
 
-  function renderPagination(container, config, totalRecords, onPageChange) {
+  function renderPagination(container, config, totalRecords, onPageChange, currentPage) {
     ensureFontAwesome();
     var totalPages = Math.max(1, Math.ceil(totalRecords / config.pageSize));
     var existing = container.nextSibling && container.nextSibling.nodeType === 1
@@ -260,6 +260,10 @@
     prev.type = 'button';
     prev.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
     prev.setAttribute('data-inkline-page', 'prev');
+    if (currentPage <= 0) {
+      prev.disabled = true;
+      prev.setAttribute('data-inkline-disabled', 'true');
+    }
     existing.appendChild(prev);
 
     for (var i = 0; i < totalPages; i += 1) {
@@ -277,6 +281,10 @@
     next.type = 'button';
     next.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
     next.setAttribute('data-inkline-page', 'next');
+    if (currentPage >= totalPages - 1) {
+      next.disabled = true;
+      next.setAttribute('data-inkline-disabled', 'true');
+    }
     existing.appendChild(next);
 
     existing.addEventListener('click', function (event) {
@@ -286,6 +294,7 @@
         target = target.parentNode;
       }
       if (!target || !target.hasAttribute('data-inkline-page')) return;
+      if (target.disabled || target.hasAttribute('data-inkline-disabled')) return;
       var value = target.getAttribute('data-inkline-page');
       onPageChange(value);
     });
@@ -558,12 +567,31 @@
             } else {
               btn.removeAttribute('data-inkline-active');
             }
+            var pageAttr = btn.getAttribute('data-inkline-page');
+            if (pageAttr === 'prev') {
+              if (currentPage <= 0) {
+                btn.disabled = true;
+                btn.setAttribute('data-inkline-disabled', 'true');
+              } else {
+                btn.disabled = false;
+                btn.removeAttribute('data-inkline-disabled');
+              }
+            } else if (pageAttr === 'next') {
+              var totalPages = Math.max(1, Math.ceil(records.length / config.pageSize));
+              if (currentPage >= totalPages - 1) {
+                btn.disabled = true;
+                btn.setAttribute('data-inkline-disabled', 'true');
+              } else {
+                btn.disabled = false;
+                btn.removeAttribute('data-inkline-disabled');
+              }
+            }
           }
         }
       };
 
       renderTemplateList(container, config, records, template, currentPage);
-      renderPagination(container, config, records.length, updatePage);
+      renderPagination(container, config, records.length, updatePage, currentPage);
     } catch (error) {
       removeLoading(container);
       renderError(container, 'Unable to load data: ' + error.message);
