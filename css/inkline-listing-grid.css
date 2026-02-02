@@ -1,0 +1,64 @@
+/* Minimal, Bootstrap-like defaults for Inkline listing grid */
+
+.inkline-pagination {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.inkline-pagination button {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #0d6efd;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.inkline-pagination button[data-inkline-active="true"] {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+.inkline-pagination button[data-inkline-disabled="true"],
+.inkline-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.listing-grid-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.listing-grid-item__title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.listing-grid-item__details {
+  margin: 0;
+  padding-left: 18px;
+  color: #495057;
+}
+
+.table.inkline-listing-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table.inkline-listing-grid th,
+.table.inkline-listing-grid td {
+  border: 1px solid #dee2e6;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.table.inkline-listing-grid thead th {
+  background: #f8f9fa;
+  font-weight: 600;
+}

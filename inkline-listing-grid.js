@@ -1,29 +1,7 @@
 (function () {
   'use strict';
 
-  function findScriptTag() {
-    if (document.currentScript) {
-      return document.currentScript;
-    }
-    var scripts = document.querySelectorAll('script[data-inkline-token], script[data-inkline-location-id], script[data-inkline-base-url], script[data-inkline-version]');
-    if (scripts.length > 0) {
-      return scripts[scripts.length - 1];
-    }
-    var srcScripts = document.querySelectorAll('script[src*="inkline-listing-grid.js"]');
-    if (srcScripts.length > 0) {
-      return srcScripts[srcScripts.length - 1];
-    }
-    return null;
-  }
-
-  function findConfigScriptTag() {
-    var scripts = document.querySelectorAll('script[data-inkline-token], script[data-inkline-location-id]');
-    if (scripts.length > 0) {
-      return scripts[scripts.length - 1];
-    }
-    return null;
-  }
-
+  // Shared configuration is supplied via window.InklineListingConfig.
   function getGlobalConfigDataset() {
     if (!window || !window.InklineListingConfig) {
       return null;
@@ -42,10 +20,12 @@
       inklineBaseUrl: cfg.baseUrl,
       inklineVersion: cfg.version,
       inklineEmptyText: cfg.emptyText,
-      inklineDebug: cfg.debug
+      inklineDebug: cfg.debug,
+      inklineCssUrl: cfg.cssUrl
     };
   }
 
+  // Merge dataset values with defaults and normalize numeric fields.
   function readConfigFromDataset(dataset, defaults) {
     var source = dataset || {};
     var pageLimit = parseInt(source.inklinePageLimit || (defaults && defaults.pageLimit) || '100', 10);
@@ -73,10 +53,12 @@
       maxPages: maxPages,
       pageLimit: pageLimit,
       pageSize: pageSize,
-      debug: source.inklineDebug === 'true' || source.inklineDebug === true || (defaults && defaults.debug) || false
+      debug: source.inklineDebug === 'true' || source.inklineDebug === true || (defaults && defaults.debug) || false,
+      cssUrl: source.inklineCssUrl || (defaults && defaults.cssUrl) || ''
     };
   }
 
+  // Lightweight debug logger controlled by config.debug.
   function logDebug(config, message, data) {
     if (!config || !config.debug || !window || !window.console || !console.log) return;
     if (typeof data !== 'undefined') {
@@ -86,31 +68,24 @@
     }
   }
 
-  function readConfig(script) {
-    var dataset = (script && script.dataset) ? script.dataset : {};
-    return readConfigFromDataset(dataset, null);
-  }
-
+  // Use the listing element if provided; otherwise create a default container.
   function ensureContainer(listingElement) {
     if (listingElement) {
       return listingElement;
     }
     var container = document.createElement('div');
     container.id = 'inkline-listing-grid';
-    var scriptTag = findScriptTag();
-    if (scriptTag && scriptTag.parentNode) {
-      scriptTag.parentNode.insertBefore(container, scriptTag.nextSibling);
-    } else {
-      document.body.appendChild(container);
-    }
+    document.body.appendChild(container);
     return container;
   }
 
+  // Determine whether the target is part of a table structure.
   function isTableContainer(container) {
     var tag = container && container.tagName ? container.tagName.toLowerCase() : '';
     return tag === 'table' || tag === 'thead' || tag === 'tbody' || tag === 'tfoot' || tag === 'tr';
   }
 
+  // Detect existing Font Awesome by checking loaded styles/scripts.
   function hasFontAwesome() {
     if (window && window.FontAwesome) return true;
     var links = document.querySelectorAll('link[rel~=\"stylesheet\"]');
@@ -130,6 +105,19 @@
     return false;
   }
 
+  // Inject an external stylesheet once if a URL is provided.
+  function ensureExternalCss(url) {
+    if (!url) return;
+    var existing = document.querySelector('link[data-inkline-css]');
+    if (existing) return;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    link.setAttribute('data-inkline-css', 'true');
+    document.head.appendChild(link);
+  }
+
+  // Only inject Font Awesome if the page doesn't already include it.
   function ensureFontAwesome() {
     if (hasFontAwesome()) return;
     if (document.querySelector('link[data-inkline-fa]')) return;
@@ -140,6 +128,7 @@
     document.head.appendChild(link);
   }
 
+  // Inject minimal CSS once for the loading indicator.
   function ensureLoadingStyles() {
     if (document.querySelector('style[data-inkline-loading-style]')) return;
     var style = document.createElement('style');
@@ -150,6 +139,7 @@
     document.head.appendChild(style);
   }
 
+  // Show a spinner (or text fallback) while data loads.
   function renderLoading(container) {
     ensureFontAwesome();
     ensureLoadingStyles();
@@ -177,6 +167,7 @@
     }
   }
 
+  // Remove loading indicator from the container or its immediate sibling.
   function removeLoading(container) {
     var loading = container.querySelector('[data-inkline-loading]');
     if (!loading && container.nextSibling && container.nextSibling.nodeType === 1) {
@@ -189,6 +180,7 @@
     }
   }
 
+  // Render a simple error message in the target container.
   function renderError(container, message) {
     container.innerHTML = '';
     var p = document.createElement('p');
@@ -196,6 +188,7 @@
     container.appendChild(p);
   }
 
+  // Render a single page of records using the provided template.
   function renderTemplateList(container, config, records, template, pageIndex) {
     removeLoading(container);
 
@@ -216,6 +209,7 @@
 
     var existingItems = container.querySelectorAll('[data-inkline-item]');
     for (var r = 0; r < existingItems.length; r += 1) {
+      // Clear previously rendered items before inserting the new page.
       existingItems[r].parentNode.removeChild(existingItems[r]);
     }
 
@@ -227,6 +221,7 @@
         var fragment = wrapper.content.cloneNode(true);
         var first = fragment.firstElementChild;
         if (first) {
+          // Mark rendered nodes for pagination cleanup.
           first.setAttribute('data-inkline-item', 'true');
         }
         container.appendChild(fragment);
@@ -234,6 +229,7 @@
     }
   }
 
+  // Render paging controls after the target container.
   function renderPagination(container, config, totalRecords, onPageChange, currentPage) {
     ensureFontAwesome();
     var totalPages = Math.max(1, Math.ceil(totalRecords / config.pageSize));
@@ -287,6 +283,7 @@
     }
     existing.appendChild(next);
 
+    // Event delegation for pagination buttons.
     existing.addEventListener('click', function (event) {
       var target = event.target;
       if (!target) return;
@@ -300,6 +297,7 @@
     });
   }
 
+  // Normalize API response shapes to a simple records array.
   function extractRecords(data) {
     if (!data) return [];
     if (Array.isArray(data.records)) return data.records;
@@ -310,6 +308,7 @@
     return [];
   }
 
+  // Not used currently, but kept for potential cursor-based paging.
   function extractNextCursor(data) {
     if (!data) return null;
     if (data.meta && data.meta.nextStartAfterId) return data.meta.nextStartAfterId;
@@ -322,6 +321,7 @@
     return null;
   }
 
+  // Read a field from common record shapes.
   function extractField(record, fieldKey) {
     if (!record || !fieldKey) return null;
     var shortKey = fieldKey.split('.').pop();
@@ -351,6 +351,7 @@
     return null;
   }
 
+  // Extract updated timestamp from common fields.
   function extractUpdatedAt(record) {
     if (record && record.updatedAt) return record.updatedAt;
     if (record && record.updated_at) return record.updated_at;
@@ -359,6 +360,7 @@
     return null;
   }
 
+  // Extract created timestamp from common fields.
   function extractCreatedAt(record) {
     if (record && record.createdAt) return record.createdAt;
     if (record && record.created_at) return record.created_at;
@@ -373,6 +375,7 @@
     return null;
   }
 
+  // Convert ISO strings to a localized string when possible.
   function formatDateTimeValue(value) {
     if (!value) return '';
     var date = new Date(value);
@@ -382,6 +385,7 @@
     return String(value);
   }
 
+  // Basic HTML escaping for token substitution safety.
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, '&amp;')
@@ -391,6 +395,7 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Resolve a single token to its value.
   function getTokenValue(record, token, config) {
     if (token === 'updatedAt' || token === 'updated_at') {
       var updated = extractUpdatedAt(record);
@@ -405,6 +410,7 @@
     return value;
   }
 
+  // Replace all {{ token }} instances with values.
   function buildTemplateHtml(record, template, config) {
     return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, function (match, token) {
       var rawValue = getTokenValue(record, token, config);
@@ -413,6 +419,7 @@
     });
   }
 
+  // Fetch the template HTML from a public URL.
   async function loadTemplate(url) {
     var response = await fetch(url, { method: 'GET', mode: 'cors' });
     if (!response.ok) {
@@ -421,6 +428,7 @@
     return response.text();
   }
 
+  // Perform an authenticated API request to Inkline Connect.
   async function apiRequest(config, payload) {
     var url = config.baseUrl.replace(/\/$/, '') + '/objects/' + encodeURIComponent(config.schemaKey) + '/records/search';
 
@@ -463,6 +471,7 @@
     return data;
   }
 
+  // Fetch all pages from the API (server-side paging).
   async function fetchAllRecords(config) {
     var records = [];
     var page = 1;
@@ -476,6 +485,7 @@
       };
 
       if (config.sortField) {
+        // Allow full field keys in config, but send short key to API.
         var sortField = config.sortField;
         if (sortField.indexOf('.') !== -1) {
           sortField = sortField.split('.').pop();
@@ -503,8 +513,10 @@
     return records;
   }
 
+  // Initialize a single listing block.
   async function initListing(config, listingElement) {
     var container = ensureContainer(listingElement);
+    ensureExternalCss(config.cssUrl);
 
     logDebug(config, 'Resolved config', {
       hasToken: !!config.apiToken,
@@ -544,6 +556,7 @@
       var template = await loadTemplate(config.templateUrl);
       var currentPage = 0;
 
+      // Handle pagination changes and re-render the current page.
       var updatePage = function (value) {
         var totalPages = Math.max(1, Math.ceil(records.length / config.pageSize));
         if (value === 'prev') {
@@ -601,21 +614,10 @@
     }
   }
 
+  // Build global defaults from window.InklineListingConfig, then init listings.
   async function init() {
-    var scriptTag = findScriptTag();
-    var defaults = readConfig(scriptTag);
-    if (!defaults.apiToken || !defaults.locationId) {
-      var configScript = findConfigScriptTag();
-      if (configScript && configScript !== scriptTag) {
-        defaults = readConfig(configScript);
-      }
-    }
-    if (!defaults.apiToken || !defaults.locationId) {
-      var globalDataset = getGlobalConfigDataset();
-      if (globalDataset) {
-        defaults = readConfigFromDataset(globalDataset, defaults);
-      }
-    }
+    var globalDataset = getGlobalConfigDataset();
+    var defaults = readConfigFromDataset(globalDataset || {}, null);
     var listingBlocks = document.querySelectorAll('[data-inkline-listing]');
 
     if (!listingBlocks.length) {

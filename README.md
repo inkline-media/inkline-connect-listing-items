@@ -15,7 +15,7 @@ A lightweight, embeddable JavaScript widget for Inkline Connect pages that fetch
 
 1. Host the widget JS and your template file at public URLs (e.g., GitHub + jsDelivr or Inkline Connect File Manager).
 2. Add one or more listing blocks to your page.
-3. Add a single script tag with shared settings (token, location, paging).
+3. Add the script tag (the shared settings come from `window.InklineListingConfig`).
 
 Example embed:
 
@@ -38,6 +38,7 @@ Example embed:
     pageSize: 10,
     pageLimit: 100,
     maxPages: 20,
+    cssUrl: "https://inkline-media.github.io/inkline-connect-listing-items/css/inkline-listing-grid.css"
   };
 </script>
 
@@ -92,27 +93,16 @@ You can set shared settings globally with a small inline script:
     token: "YOUR_API_TOKEN",
     locationId: "YOUR_LOCATION_ID",
     debug: true,
+    pageSize: 10,
     pageLimit: 100,
     maxPages: 20,
   };
 </script>
 ```
 
-## Configuration (Script `data-*` Attributes)
+## Configuration (Global Settings)
 
-If you prefer not to use `window.InklineListingConfig`, you can provide the same values on the script tag.
-
-| Attribute                  | Required | Description                                   | Default                                |
-| -------------------------- | -------- | --------------------------------------------- | -------------------------------------- |
-| `data-inkline-token`       | Yes\*    | API access token (read‑only OK)               | —                                      |
-| `data-inkline-location-id` | Yes\*    | Location ID                                   | —                                      |
-| `data-inkline-page-limit`  | No       | Records per page                              | `100`                                  |
-| `data-inkline-max-pages`   | No       | Max pages to request                          | `20`                                   |
-| `data-inkline-base-url`    | No       | API base URL                                  | `https://services.leadconnectorhq.com` |
-| `data-inkline-version`     | No       | Inkline Connect API version header            | `2021-07-28`                           |
-| `data-inkline-debug`       | No       | Enable console debug logs (`true` or `false`) | `false`                                |
-
-\*Required if not provided via `window.InklineListingConfig`.
+All shared settings are provided via `window.InklineListingConfig` (token, location, paging, debug, optional CSS).
 
 ## Configuration (Listing Block `data-*` Attributes)
 
@@ -157,7 +147,7 @@ Example table:
 
 ## Multiple Listings on One Page
 
-To avoid loading the JS multiple times, include the script **once** with shared settings (token, location, paging), then create multiple listing blocks with `data-inkline-listing` and per‑listing overrides.
+To avoid loading the JS multiple times, include the script **once** and create multiple listing blocks with `data-inkline-listing` and per‑listing overrides. Shared settings still come from `window.InklineListingConfig`.
 
 ```html
 <div
@@ -194,7 +184,6 @@ To avoid loading the JS multiple times, include the script **once** with shared 
 
 - **Cache busting:** When updating the JS file, bump the `?v=` query string to avoid cached versions.
 - **CORS:** If your template file or the API is blocked by CORS, host the file from a compatible CDN (jsDelivr, Inkline Connect File Manager, etc.).
-- **Raw GitHub URLs:** `raw.githubusercontent.com` serves `text/plain` and may not execute as a script in some browsers. Prefer jsDelivr or GitHub Pages.
 
 ## Security
 
