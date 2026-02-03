@@ -1,18 +1,15 @@
 <div class="listing-grid-item">
-  <div class="listing-grid-item__title">
-    {{ custom_objects.service_status_events.event_title }}
+  <div class="listing-grid-item__details">
+    <div class="listing-grid-item__details__event-date">
+      {{ custom_objects.service_status_events.event_datetime }}
+    </div>
+    <div class="listing-grid-item__details__title">
+      {{ custom_objects.service_status_events.event_title }}
+    </div>
+
+    <div class="listing-grid-item__details__description">
+      {{ custom_objects.service_status_events.event_description }}
+    </div>
+    <div class="listing-grid-item__details__updated-date">Updated on {{ updatedAt }}</div>
   </div>
-  <ul class="listing-grid-item__details">
-    <li>
-      Description: {{ custom_objects.service_status_events.event_description }}
-    </li>
-    <li>
-      Event Date/Time: {{ custom_objects.service_status_events.event_datetime }}
-      {{ custom_objects.service_status_events.event_hour }}:{{
-      custom_objects.service_status_events.event_minutes }} {{
-      custom_objects.service_status_events.event_ampm }}
-    </li>
-    <li>Created At:: {{ createdAt }}</li>
-    <li>Last Updated: {{ updatedAt }}</li>
-  </ul>
 </div>
