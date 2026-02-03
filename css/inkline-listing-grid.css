@@ -89,7 +89,7 @@ body {
   flex-shrink: 0;
 }
 
-.listing-grid-item__details__created-date {
+.listing-grid-item__details__event-date {
   color: #000;
   font-size: 16px;
   font-style: normal;
