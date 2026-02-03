@@ -13,3 +13,18 @@
     <div class="listing-grid-item__details__updated-date">Updated on {{ updatedAt }}</div>
   </div>
 </div>
+<script>
+  document.querySelectorAll(".listing-grid-item__details__event-date").forEach(el => {
+    const rawDate = el.textContent.trim();
+
+    if (!rawDate) return;
+
+    const formatted = new Date(rawDate).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+    el.textContent = formatted;
+  });
+</script>
