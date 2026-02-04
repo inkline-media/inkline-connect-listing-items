@@ -227,6 +227,7 @@
         container.appendChild(fragment);
       }
     }
+    formatEventDates(container);
   }
 
   // Render paging controls after the target container.
@@ -384,6 +385,35 @@
     }
     return String(value);
   }
+
+  // Event Date formatting
+  function formatEventDateValue(value) {
+  if (!value) return '';
+
+  var date = new Date(value);
+
+  if (!isNaN(date.getTime())) {
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
+
+  return String(value);
+}
+
+function formatEventDates(container) {
+  container
+    .querySelectorAll(".listing-grid-item__details__event-date")
+    .forEach(el => {
+      var raw = el.textContent.trim();
+      if (!raw) return;
+
+      el.textContent = formatEventDateValue(raw);
+    });
+}
+
 
   // Basic HTML escaping for token substitution safety.
   function escapeHtml(value) {
